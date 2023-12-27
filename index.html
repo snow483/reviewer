@@ -169,6 +169,7 @@
     }
 
     async function getGemini() {
+      document.getElementById('result').innerHTML = '';
       const uploadForm = document.getElementById("uploadForm");
       const formData = new FormData(uploadForm);
 
