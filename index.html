@@ -49,11 +49,12 @@
       display: block;
     }
 
-    #preview-image {
-      width: 100%;
-      height: 100%;
+    .preview-image {
+      width: 20%;
+      height: 20%;
       object-fit: cover;
       border-radius: 8px;
+      margin-bottom: 10px; /* 각 미리보기 이미지 사이에 간격 추가 */
     }
 
     .drag-text {
@@ -108,13 +109,13 @@
   <div class="container">
     <label id="file-label" for="file-input">이미지 업로드</label>
     <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="image" id="file-input" accept=".jpeg, .jpg, .png, .gif, .webp" onchange="handleFileUpload(event)" />
+      <input type="file" name="files" id="file-input" accept=".jpeg, .jpg, .png, .gif, .webp" onchange="handleFileUpload(event)" multiple/>
     </form>
     
     <div id="preview-container" class="review-container">
       <div class="image-container" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
         <div class="drag-text">여기에 이미지를 드래그하세요</div>
-        <img id="preview-image" alt="미리보기" style="display:none;"/>
+        <div id="preview-images"></div> <!-- 여러 개의 미리보기 이미지를 표시할 컨테이너 추가 -->
       </div>
     </div>
 
@@ -133,26 +134,32 @@
       event.preventDefault();
       
       const fileInput = event.target;
-      const previewContainer = document.getElementById("preview-container");
-      const previewImage = document.getElementById("preview-image");
+      const previewContainer = document.getElementById("preview-images");
       const dragText = document.querySelector(".drag-text");
+      const files = fileInput.files;
 
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
+      previewContainer.innerHTML = ''; // 이미지를 다시 업로드할 때 이전의 미리보기를 지움
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const reader = new FileReader();
 
         reader.onload = function (e) {
+          const previewImage = document.createElement('img');
+          previewImage.className = 'preview-image';
           previewImage.src = e.target.result;
-          previewContainer.style.display = "block";
-          previewImage.style.display = "block";
-          dragText.style.display = "none";
+          previewContainer.appendChild(previewImage);
         };
 
         reader.readAsDataURL(file);
+      }
+
+      if (files.length > 0) {
+        dragText.style.display = 'none';
         getGemini();
       }
     }
-
+    
     function showLoading() {
       const loadingBackground = document.getElementById("loading-background");
       const loadingContainer = document.getElementById("loading-container");
