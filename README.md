@@ -1,2 +1,3 @@
 # reviewer
-리뷰 생성기
+Gemini AI 
+리뷰 자동 생성
