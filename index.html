@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>상품 리뷰 웹앱</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .review-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .image-container {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      border: 2px dashed #4caf50;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    #file-label {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    #preview-container {
+      display: block;
+    }
+
+    #preview-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .drag-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #4caf50;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #loading-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5); /* 어두운 배경 색상 및 투명도 설정 */
+      display: none;
+      z-index: 999;
+    }
+
+    #loading-container {
+      text-align: center;
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+
+    #loading-spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <label id="file-label" for="file-input">이미지 업로드</label>
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="image" id="file-input" accept=".jpeg, .jpg, .png, .gif, .webp" onchange="handleFileUpload(event)" />
+    </form>
+    
+    <div id="preview-container" class="review-container">
+      <div class="image-container" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+        <div class="drag-text">여기에 이미지를 드래그하세요</div>
+        <img id="preview-image" alt="미리보기" style="display:none;"/>
+      </div>
+    </div>
+
+    <div class="review-container">
+      <div class="review-text" id="result"></div>
+    </div>
+    
+    <div id="loading-background"></div>
+    <div id="loading-container">
+      <div id="loading-spinner"></div>
+    </div>
+  </div>
+
+  <script>
+    function handleFileUpload(event) {
+      event.preventDefault();
+      
+      const fileInput = event.target;
+      const previewContainer = document.getElementById("preview-container");
+      const previewImage = document.getElementById("preview-image");
+      const dragText = document.querySelector(".drag-text");
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          previewImage.src = e.target.result;
+          previewContainer.style.display = "block";
+          previewImage.style.display = "block";
+          dragText.style.display = "none";
+        };
+
+        reader.readAsDataURL(file);
+        getGemini();
+      }
+    }
+
+    function showLoading() {
+      const loadingBackground = document.getElementById("loading-background");
+      const loadingContainer = document.getElementById("loading-container");
+      
+      loadingBackground.style.display = "block";
+      loadingContainer.style.display = "block";
+    }
+
+    function hideLoading() {
+      const loadingBackground = document.getElementById("loading-background");
+      const loadingContainer = document.getElementById("loading-container");
+      
+      loadingBackground.style.display = "none";
+      loadingContainer.style.display = "none";
+    }
+
+    async function getGemini() {
+      const uploadForm = document.getElementById("uploadForm");
+      const formData = new FormData(uploadForm);
+
+      try {
+        showLoading(); // 데이터 받아오는 동안 로딩 중 상태 표시
+
+        const response = await fetch('http://localhost:3000/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.text();
+          document.getElementById('result').innerHTML = result.replace(/\n/g, "<br>");;
+        } else {
+          console.error('Error:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error:', error.message);
+      } finally {
+        hideLoading(); // 데이터 받아오는 동안 로딩 중 상태 숨김
+      }
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById("file-input");
+      fileInput.files = event.dataTransfer.files;
+      const files = event.dataTransfer.files;
+      if (files.length > 0) {
+        event.target.files = files;
+        handleFileUpload(event);
+      }
+    }
+
+  </script>
+</body>
+</html>
