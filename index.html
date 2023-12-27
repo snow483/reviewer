@@ -175,7 +175,7 @@
       try {
         showLoading(); // 데이터 받아오는 동안 로딩 중 상태 표시
 
-        const response = await fetch('http://localhost:3000/upload', {
+        const response = await fetch('https://port-0-reviewer-server-5r422alqnc9t9p.sel4.cloudtype.app/upload', {
           method: 'POST',
           body: formData,
         });
